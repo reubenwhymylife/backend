@@ -10,7 +10,7 @@ import { sendEmail } from "../../utils/sendEmail";
 import path from "path";
 const templatePath = path.join(__dirname, "../../../template", "welcome.ejs");
 const adminTemplate = path.join(__dirname, "../../../template", "admin.ejs");
-console.log(templatePath);
+// console.log(templatePath);
 export const RegisterService = async <M extends WHYMYLIFE_REG_DTO>(data: M) => {
   // check if user exist
   interface emailDetails {
@@ -43,7 +43,7 @@ export const RegisterService = async <M extends WHYMYLIFE_REG_DTO>(data: M) => {
       username: `${newUser.firstName} ${newUser.lastName}`,
       emailTemplate: templatePath,
     };
-    console.log(verificationToken);
+    // console.log(verificationToken);
     await sendEmail(emailData);
     return newUser;
   } catch (error: any) {

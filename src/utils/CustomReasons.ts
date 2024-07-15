@@ -38,7 +38,7 @@ enum MyReasons {
   INVALIDE_OTP_PROVIDED = "Invalide OTP Provided",
   VERIFICATION_SUCCESS = "Verification Successful",
   // ADMIN_EMAIL = "lira_typists.05@icloud.com",
-  ADMIN_EMAIL = "abrahamjude1999@gmail.com",
+  ADMIN_EMAIL = "info@whymylife.me",
   INVALIDE_REQUEST = "Invalid Request",
   UNAUTHORIZED_EVENT_TYPE = "Unhandled event type",
   INVALIDE_SIGNATURE = "Invalid signature",
