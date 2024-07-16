@@ -41,7 +41,7 @@ var MyReasons;
     MyReasons["INVALIDE_OTP_PROVIDED"] = "Invalide OTP Provided";
     MyReasons["VERIFICATION_SUCCESS"] = "Verification Successful";
     // ADMIN_EMAIL = "lira_typists.05@icloud.com",
-    MyReasons["ADMIN_EMAIL"] = "abrahamjude1999@gmail.com";
+    MyReasons["ADMIN_EMAIL"] = "info@whymylife.me";
     MyReasons["INVALIDE_REQUEST"] = "Invalid Request";
     MyReasons["UNAUTHORIZED_EVENT_TYPE"] = "Unhandled event type";
     MyReasons["INVALIDE_SIGNATURE"] = "Invalid signature";

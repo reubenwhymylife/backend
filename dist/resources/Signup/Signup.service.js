@@ -22,7 +22,7 @@ const sendEmail_1 = require("../../utils/sendEmail");
 const path_1 = __importDefault(require("path"));
 const templatePath = path_1.default.join(__dirname, "../../../template", "welcome.ejs");
 const adminTemplate = path_1.default.join(__dirname, "../../../template", "admin.ejs");
-console.log(templatePath);
+// console.log(templatePath);
 const RegisterService = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const isExist = yield Signup_model_1.default.findOne({ email: data.email }).exec();
     if (isExist) {
@@ -44,7 +44,7 @@ const RegisterService = (data) => __awaiter(void 0, void 0, void 0, function* ()
             username: `${newUser.firstName} ${newUser.lastName}`,
             emailTemplate: templatePath,
         };
-        console.log(verificationToken);
+        // console.log(verificationToken);
         yield (0, sendEmail_1.sendEmail)(emailData);
         return newUser;
     }
