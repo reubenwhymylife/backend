@@ -79,7 +79,7 @@ export const getUserInfo = async (req: Request, res: Response) => {
       })
       .populate({
         path: "subscriptions",
-        select: "forMe forOthers totalCost",
+        select: "forMe forOthers totalCost isActive",
       })
       .populate({
         path: "purposes",
@@ -109,6 +109,7 @@ export const getUserInfo = async (req: Request, res: Response) => {
           renewable: item?.forOthers?.renewable,
         },
         totalCost: item?.totalCost,
+        isActive: item?.isActive
       };
       subsFinals.push(subscriptionData);
     }

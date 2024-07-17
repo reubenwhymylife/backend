@@ -37,6 +37,7 @@ export interface Subs {
   forMe: forMe;
   forOthers: forOthers;
   totalCost: string;
+  isActive?:boolean
 }
 export enum Roles {
   USER = "user",

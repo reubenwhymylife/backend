@@ -75,7 +75,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         })
             .populate({
             path: "subscriptions",
-            select: "forMe forOthers totalCost",
+            select: "forMe forOthers totalCost isActive",
         })
             .populate({
             path: "purposes",
@@ -105,6 +105,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     renewable: (_d = item === null || item === void 0 ? void 0 : item.forOthers) === null || _d === void 0 ? void 0 : _d.renewable,
                 },
                 totalCost: item === null || item === void 0 ? void 0 : item.totalCost,
+                isActive: item === null || item === void 0 ? void 0 : item.isActive
             };
             subsFinals.push(subscriptionData);
         }
