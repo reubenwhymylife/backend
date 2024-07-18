@@ -20,7 +20,7 @@ const subscriptionSchema = new mongoose_1.Schema({
     forMe: {
         userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "user" },
         noOfMonths: { type: Number, required: true },
-        renewable: { type: Boolean, required: true, default: false },
+        renewable: { type: Boolean, default: false },
     },
     forOthers: {
         noOfMonths: { type: Number },

@@ -31,7 +31,7 @@ const subscriptionSchema = new Schema<ISubscription>(
     forMe: {
       userId: { type: Schema.Types.ObjectId, ref: "user" },
       noOfMonths: { type: Number, required: true },
-      renewable: { type: Boolean, required: true, default:false },
+      renewable: { type: Boolean, default:false },
     },
     forOthers: {
       noOfMonths: { type: Number },

@@ -26,9 +26,9 @@ const subscriptionControler = (req, res, next) => __awaiter(void 0, void 0, void
     }
     const subscriptionPayload = {
         forMe: {
-            userId: req.body.forMe.userId,
+            userId: sessionId || req.body.userId,
             noOfMonths: req.body.forMe.noOfMonths,
-            renewable: req.body.forMe.renewable,
+            renewable: req.body.forMe.renewable || false,
         },
         forOthers: {
             noOfMonths: req.body.forOthers.noOfMonths,

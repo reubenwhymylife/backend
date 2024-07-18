@@ -74,11 +74,11 @@ class App {
             name: "whymylife_Captcha",
             store: mystore,
             cookie: {
-                secure: true,
-                httpOnly: true,
+                secure: false,
+                httpOnly: false,
                 maxAge: 1000 * 60 * 60 * 24,
-                partitioned: true,
-                sameSite: "none",
+                // partitioned: true,
+                sameSite: "lax",
             },
         }));
     }
