@@ -67,7 +67,7 @@ const singlePaymentServie = (paymentId) => __awaiter(void 0, void 0, void 0, fun
 exports.singlePaymentServie = singlePaymentServie;
 const webhookService = (email) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const info = yield payment_model_2.default.findOne({ email: email }).exec();
+        const info = yield payment_model_2.default.findOne({ email: email, transactionStatus: payment_model_1.TxnStatus.PENDING }).exec();
         if (!info) {
             throw new error_moddleware_1.CustomError({
                 message: CustomReasons_1.Reasons.customedReasons.USER_NOT_FOUND,

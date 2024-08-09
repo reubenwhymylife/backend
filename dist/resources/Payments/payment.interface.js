@@ -5,4 +5,6 @@ var paymentType;
 (function (paymentType) {
     paymentType["SUBSCRIPTION"] = "subscription";
     paymentType["PURPOSEPLAN"] = "purpose-plan";
+    paymentType["DAILYMESSAGE"] = "daily-message";
+    paymentType["CONTENTPAYMENT"] = "content-payment";
 })(paymentType || (exports.paymentType = paymentType = {}));

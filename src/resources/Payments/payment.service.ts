@@ -56,7 +56,7 @@ export const singlePaymentServie = async (paymentId:any)=>{
 }
 export const webhookService = async (email:string)=>{
 try {
-    const info = await paymentModel.findOne({email:email}).exec()
+    const info = await paymentModel.findOne({email:email, transactionStatus:TxnStatus.PENDING}).exec()
   if(!info){
      throw new CustomError({
       message: Reasons.customedReasons.USER_NOT_FOUND,
