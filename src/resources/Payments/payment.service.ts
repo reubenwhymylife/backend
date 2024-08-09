@@ -65,7 +65,7 @@ try {
     });
   }
 
-  const updateUserTxnstatus = await paymentModel.findOneAndUpdate({email:info.email}, {
+  const updateUserTxnstatus = await paymentModel.findOneAndUpdate({email:info.email, transactionStatus:TxnStatus.PENDING}, {
     $set:{
       transactionStatus: TxnStatus.SUCCESS
     }
