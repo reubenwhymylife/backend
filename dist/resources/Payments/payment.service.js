@@ -75,7 +75,7 @@ const webhookService = (email) => __awaiter(void 0, void 0, void 0, function* ()
                 reason: "User with these email is not found",
             });
         }
-        const updateUserTxnstatus = yield payment_model_2.default.findOneAndUpdate({ email: info.email }, {
+        const updateUserTxnstatus = yield payment_model_2.default.findOneAndUpdate({ email: info.email, transactionStatus: payment_model_1.TxnStatus.PENDING }, {
             $set: {
                 transactionStatus: payment_model_1.TxnStatus.SUCCESS
             }
