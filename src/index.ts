@@ -77,15 +77,15 @@ this.app.use(
       session({
         secret: process.env.SESSION_SECRET_KEY as string,
         resave: true,
-        saveUninitialized: false,
+        saveUninitialized: true,
         name: "whymylife_Captcha",
         store: mystore,
        cookie: {
-        secure: false, 
-        httpOnly: false,
+        secure: true, 
+        httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
-        // partitioned: true,
-        sameSite: "lax",
+        partitioned: true,
+        sameSite: "none",
 },
       })
     );

@@ -132,6 +132,8 @@ export const paystack = async (req: Request, res: Response) => {
     const params = JSON.stringify({
       email: payload.email,
       amount: payload.amount * 100,
+      callback_url: 'https://whymylife.me',
+      cancel_action: 'https://whymylife.me',
     });
 
     const options = {
