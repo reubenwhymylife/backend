@@ -69,16 +69,16 @@ class App {
         // this.app.set("trust proxy", 1);
         this.app.use((0, express_session_1.default)({
             secret: process.env.SESSION_SECRET_KEY,
-            resave: false,
+            resave: true,
             saveUninitialized: false,
             name: "whymylife_Captcha",
             store: mystore,
             cookie: {
-                secure: false,
-                httpOnly: false,
+                secure: true,
+                httpOnly: true,
                 maxAge: 1000 * 60 * 60 * 24,
-                // partitioned: true,
-                sameSite: "lax",
+                partitioned: true,
+                sameSite: "none",
             },
         }));
     }
