@@ -66,10 +66,10 @@ class App {
         this.app.set("view engine", "ejs");
     }
     initializeSession() {
-        this.app.set("trust proxy", 1);
+        // this.app.set("trust proxy", 1);
         this.app.use((0, express_session_1.default)({
             secret: process.env.SESSION_SECRET_KEY,
-            resave: true,
+            resave: false,
             saveUninitialized: false,
             name: "whymylife_Captcha",
             store: mystore,

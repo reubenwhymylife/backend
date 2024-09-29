@@ -38,7 +38,7 @@ export const createContactUsService = async <T extends IcontactUs>(
 };
 
 export const allContactus = async () => {
-  const response = await ContactModel.find().exec();
+  const response = await ContactModel.find().populate("userId").select("-password").exec();
   if (!response) {
     throw new CustomError({
       message: Reasons.defaultReasons.NOT_FOUND,

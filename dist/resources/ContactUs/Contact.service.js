@@ -47,7 +47,7 @@ const createContactUsService = (payload) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.createContactUsService = createContactUsService;
 const allContactus = () => __awaiter(void 0, void 0, void 0, function* () {
-    const response = yield Contact_model_1.default.find().exec();
+    const response = yield Contact_model_1.default.find().populate("userId").select("-password").exec();
     if (!response) {
         throw new error_moddleware_1.CustomError({
             message: CustomReasons_1.Reasons.defaultReasons.NOT_FOUND,

@@ -139,6 +139,8 @@ const paystack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const params = JSON.stringify({
             email: payload.email,
             amount: payload.amount * 100,
+            callback_url: 'https://whymylife.me',
+            cancel_action: 'https://whymylife.me',
         });
         const options = {
             hostname: 'api.paystack.co',
