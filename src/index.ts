@@ -72,7 +72,7 @@ this.app.use(
     this.app.set("view engine", "ejs");
   }
   private initializeSession() {
-    // this.app.set("trust proxy", 1);
+    this.app.set("trust proxy", 1);
     this.app.use(
       session({
         secret: process.env.SESSION_SECRET_KEY as string,
