@@ -75,7 +75,7 @@ export const getUserInfo = async (req: Request, res: Response) => {
     })
       .populate({
         path: "payments",
-        select: "paymentRef type",
+        select: "paymentRef type transactionStatus amount",
       })
       .populate({
         path: "subscriptions",
