@@ -68,9 +68,14 @@ export const webhookService = async (email: string, eventRecord: any) => {
         reason: "User with these email is not found",
       });
     }
-
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0); // Set to the start of the day (midnight)
+    
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999); // Set to the end of the day
+    
     const updateUserTxnstatus = await paymentModel.findOneAndUpdate(
-      { email: info.email, transactionStatus: TxnStatus.PENDING },
+      { email: info.email, transactionStatus: TxnStatus.PENDING , createdAt: { $gte: todayStart, $lte: todayEnd }},
       {
         $set: {
           transactionStatus: eventRecord?.status || TxnStatus.SUCCESS,
