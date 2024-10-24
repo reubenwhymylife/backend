@@ -118,7 +118,7 @@ this.app.use(
 
     cron.schedule("*/1 * * * *", async ()=>{
       const fetchedTransactions = await paymentModel.find({transactionStatus:"PENDING"}).exec()
-        console.log(fetchedTransactions)
+        // console.log(fetchedTransactions)
         if(fetchedTransactions){
           for(const trasaction of fetchedTransactions){
             if(trasaction && trasaction.transactionRef){
