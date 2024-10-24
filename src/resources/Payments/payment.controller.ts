@@ -1,5 +1,5 @@
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 import { Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../../types/custome.response";
 import { Reasons } from "../../utils/CustomReasons";
@@ -7,7 +7,8 @@ import paymentModel, { Ipayments, TxnStatus } from "./payment.model";
 import { isEmpty } from "../../utils/checkEmptyObject";
 import { CustomError } from "../../middleware/error.moddleware";
 import { StatusCodes } from "http-status-codes";
-import * as https from 'https';
+import * as https from "https";
+import cron from "node-cron"
 import {
   deletePaymentService,
   getPaymentService,
@@ -17,6 +18,7 @@ import {
   webhookService,
 } from "./payment.service";
 import { paymentType } from "./payment.interface";
+import axios from "axios";
 
 export const payment = async (
   req: Request,
@@ -34,7 +36,7 @@ export const payment = async (
     type: req.body.type,
     paymentRef: req.body.paymentRef,
     amount: parseInt(req.body.amount),
-    email:req.body.email,
+    email: req.body.email,
     userId: req.body.userId,
   };
   if (payload.userId === "" || payload.paymentRef === "") {
@@ -65,14 +67,14 @@ export const getUserPaymentList = async (
   });
 };
 
-export const getSinglePayment = async (req:Request, res:Response)=>{
-    const paymentId = req.query.id as any
-    const response = await singlePaymentServie(paymentId)
-    return (res as CustomResponse<any>).status(200).success({
+export const getSinglePayment = async (req: Request, res: Response) => {
+  const paymentId = req.query.id as any;
+  const response = await singlePaymentServie(paymentId);
+  return (res as CustomResponse<any>).status(200).success({
     message: "PAYMENT_DETAILS_RETRIEVED",
     data: response,
   });
-}
+};
 
 export const deletePayment = async (
   req: Request,
@@ -84,7 +86,7 @@ export const deletePayment = async (
   const response = await deletePaymentService(sessionId, paymentId);
   return (res as CustomResponse<any>).status(200).success({
     message: "PAYMENT_DELETED_SUCCESSFULLY",
-    data: response
+    data: response,
   });
 };
 
@@ -110,7 +112,7 @@ export const paystack = async (req: Request, res: Response) => {
         reason: "Fields Required",
       });
     }
-    const userId = req.session.userId as any
+    const userId = req.session.userId as any;
     const payload = {
       type: req.body.txnType.toLowerCase(),
       paymentRef: req.body.paymentRef,
@@ -126,61 +128,64 @@ export const paystack = async (req: Request, res: Response) => {
       transactionStatus: TxnStatus.PENDING,
       type: payload.type,
     };
-    
-    await paymentService(newPayload); 
+
+    await paymentService(newPayload);
 
     const params = JSON.stringify({
       email: payload.email,
       amount: payload.amount * 100,
-      callback_url: 'https://whymylife.me',
-      cancel_action: 'https://whymylife.me',
+      callback_url: "https://whymylife.me",
+      cancel_action: "https://whymylife.me",
     });
 
     const options = {
-      hostname: 'api.paystack.co',
+      hostname: "api.paystack.co",
       port: 443,
-      path: '/transaction/initialize',
-      method: 'POST',
+      path: "/transaction/initialize",
+      method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     };
 
-    const reqPaystack = https.request(options, (resPaystack: any) => {
-      let data = '';
+    const reqPaystack = https
+      .request(options, (resPaystack: any) => {
+        let data = "";
 
-      resPaystack.on('data', (chunk: any) => {
-        data += chunk;
+        resPaystack.on("data", (chunk: any) => {
+          data += chunk;
+        });
+
+        resPaystack.on("end", () => {
+          try {
+            const responseData = JSON.parse(data);
+            return (res as CustomResponse<any>).status(200).success({
+              message: "Payment Initialized",
+              data: responseData,
+            });
+          } catch (error) {
+            console.error("Error parsing response from Paystack", error);
+            res
+              .status(500)
+              .json({ error: "Error parsing response from Paystack" });
+          }
+        });
+      })
+      .on("error", (error: any) => {
+        console.error("Error connecting to Paystack", error);
+        res.status(500).json({ error: "Error connecting to Paystack" });
+        throw new CustomError({
+          message: error.message,
+          code: StatusCodes.INTERNAL_SERVER_ERROR,
+          reason: "Error connecting to Paystack",
+        });
       });
-
-      resPaystack.on('end', () => {
-        try {
-          const responseData = JSON.parse(data);
-          return (res as CustomResponse<any>).status(200).success({
-    message: "Payment Initialized",
-    data: responseData,
-  });
-        } catch (error) {
-          console.error('Error parsing response from Paystack', error);
-          res.status(500).json({ error: 'Error parsing response from Paystack' });
-        }
-      });
-    }).on('error', (error: any) => {
-      console.error('Error connecting to Paystack', error);
-      res.status(500).json({ error: 'Error connecting to Paystack' });
-      throw new CustomError({
-      message: error.message,
-      code: StatusCodes.INTERNAL_SERVER_ERROR,
-      reason: "Error connecting to Paystack",
-    });
-
-    });
 
     reqPaystack.write(params);
     reqPaystack.end();
-  } catch (error:any) {
-    console.error('Error in paystack handler', error);
+  } catch (error: any) {
+    console.error("Error in paystack handler", error);
     throw new CustomError({
       message: error.message,
       code: StatusCodes.INTERNAL_SERVER_ERROR,
@@ -189,33 +194,65 @@ export const paystack = async (req: Request, res: Response) => {
   }
 };
 
-export const paymentWebhook = async (req:Request, res:Response)=>{
+export const paymentWebhook = async (req: Request, res: Response) => {
   const secret = process.env.PAYSTACK_SECRET_KEY;
-  const hash = require('crypto').createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+  const hash = require("crypto")
+    .createHmac("sha512", secret)
+    .update(JSON.stringify(req.body))
+    .digest("hex");
 
- try {
-   if (hash === req.headers['x-paystack-signature']) {
-    const event = req.body;
+  try {
+    if (hash === req.headers["x-paystack-signature"]) {
+      const event = req.body;
 
-    switch (event.event) {
-      case 'charge.success':
-          const response = await webhookService(event.data.customer.email)
-        console.log("Transaction Successful", event.event)
-      break;
-      default:
-        console.log("Unhandled event")
+      switch (event.event) {
+        case "charge.success":
+          const eventRecord = event.data
+          const response = await webhookService(event.data.customer.email, eventRecord);
+          console.log("Transaction Successful", event);
+          break;
+        default:
+          console.log("Unhandled event");
+      }
+      res.status(200).send("Webhook Received");
+    } else {
+      // Invalid signature
+      res.status(400).json({ message: "Invalid signature" });
     }
-    res.status(200).send("Webhook Received")
-  } else {
-    // Invalid signature
-    throw new CustomError({
-      message: Reasons.customedReasons.INVALIDE_SIGNATURE,
-      code: StatusCodes.BAD_REQUEST,
-      reason: "Inavalid signature",
-    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
   }
- } catch (error) {
-  console.log(error)
- }
+};
 
-}
+export const queryTransactionStatus = async (transactionReference: string) => {
+  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+  try {
+    // Query Paystack for the transaction status
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${transactionReference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    const transaction = response.data.data;
+
+    // Check if the transaction was successful
+    if (transaction.status === "success") {
+      // Handle successful transaction
+      console.log("Transaction verified successfully", transaction);
+      return transaction;
+    } else {
+      console.log("Transaction not successful yet");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error querying transaction status", error);
+    return null;
+  }
+};
+

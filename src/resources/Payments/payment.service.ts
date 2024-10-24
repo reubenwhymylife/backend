@@ -11,14 +11,14 @@ import { IPayment } from "./payment.interface";
 export const paymentService = async <M extends IPayment>(payload: M) => {
   try {
     const newProduct = new paymentModel({
-      userId:payload.userId,
+      userId: payload.userId,
       type: payload.type,
-      amount:payload.amount,
-      email:payload.email,
-      transactionStatus:TxnStatus.PENDING
+      amount: payload.amount,
+      email: payload.email,
+      transactionStatus: TxnStatus.PENDING,
     });
     await newProduct.save();
-    return newProduct
+    return newProduct;
   } catch (error: any) {
     console.log(error);
     throw new CustomError({
@@ -29,58 +29,72 @@ export const paymentService = async <M extends IPayment>(payload: M) => {
   }
 };
 
-export const singlePaymentServie = async (paymentId:any)=>{
+export const singlePaymentServie = async (paymentId: any) => {
   try {
-    const paymentDetails = await paymentModel.findOne({_id: paymentId}).populate({
-      path:"userId",
-      select:"firstName lastName"
-    }).exec()
+    const paymentDetails = await paymentModel
+      .findOne({ _id: paymentId })
+      .populate({
+        path: "userId",
+        select: "firstName lastName",
+      })
+      .exec();
     if (!paymentDetails) {
-    throw new CustomError({
-      message: Reasons.customedReasons.PAYMENT_DOES_NOT_EXIST,
-      code: StatusCodes.NOT_FOUND,
-      reason: Reasons.customedReasons.PAYMENT_DOES_NOT_EXIST,
-    });
-  }
-  
-  return paymentDetails
+      throw new CustomError({
+        message: Reasons.customedReasons.PAYMENT_DOES_NOT_EXIST,
+        code: StatusCodes.NOT_FOUND,
+        reason: Reasons.customedReasons.PAYMENT_DOES_NOT_EXIST,
+      });
+    }
+
+    return paymentDetails;
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw new CustomError({
       message: Reasons.defaultReasons.INTERNAL_SERVER_ERROR,
       code: StatusCodes.INTERNAL_SERVER_ERROR,
       reason: "Something Went Wrong",
     });
   }
-
-}
-export const webhookService = async (email:string)=>{
-try {
-    const info = await paymentModel.findOne({email:email, transactionStatus:TxnStatus.PENDING}).exec()
-  if(!info){
-     throw new CustomError({
-      message: Reasons.customedReasons.USER_NOT_FOUND,
-      code: StatusCodes.NOT_FOUND,
-      reason: "User with these email is not found",
-    });
-  }
-
-  const updateUserTxnstatus = await paymentModel.findOneAndUpdate({email:info.email, transactionStatus:TxnStatus.PENDING}, {
-    $set:{
-      transactionStatus: TxnStatus.SUCCESS
+};
+export const webhookService = async (email: string, eventRecord: any) => {
+  try {
+    const info = await paymentModel
+      .findOne({ email: email, transactionStatus: TxnStatus.PENDING })
+      .exec();
+    if (!info) {
+      throw new CustomError({
+        message: Reasons.customedReasons.USER_NOT_FOUND,
+        code: StatusCodes.NOT_FOUND,
+        reason: "User with these email is not found",
+      });
     }
-  }, {new:true})
-  // console.log(updateUserTxnstatus)
-return updateUserTxnstatus
-} catch (error:any) {
-  console.log(error);
+
+    const updateUserTxnstatus = await paymentModel.findOneAndUpdate(
+      { email: info.email, transactionStatus: TxnStatus.PENDING },
+      {
+        $set: {
+          transactionStatus: eventRecord?.status || TxnStatus.SUCCESS,
+          transactionRef: eventRecord?.reference
+        },
+      },
+      { new: true }
+    );
+    if (updateUserTxnstatus) {
+      console.log("Transaction status updated successfully:", updateUserTxnstatus);
+    } else {
+      console.log("No pending transaction found for this email.");
+    }
+    // console.log(updateUserTxnstatus)
+    // return updateUserTxnstatus;
+  } catch (error: any) {
+    console.log(error);
     throw new CustomError({
       message: error.message,
       code: StatusCodes.INTERNAL_SERVER_ERROR,
       reason: "Something Went Wrong",
     });
-}
-}
+  }
+};
 export const listOfPayments = async (sessionId: any) => {
   try {
     const userPayments = await paymentModel
@@ -141,5 +155,3 @@ export const getPaymentService = async (sessionId: any, paymentId: any) => {
   //   });
   // }
 };
-
-

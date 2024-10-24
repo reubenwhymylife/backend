@@ -14,6 +14,9 @@ import mongoStore from "connect-mongo";
 import "express-async-errors";
 import IRoute from "./routes/generalRoutes";
 import cookieParser from 'cookie-parser';
+import cron from "node-cron"
+import paymentModel from "./resources/Payments/payment.model";
+import { queryTransactionStatus } from "./resources/Payments/payment.controller";
 const mystore = mongoStore.create({
   mongoUrl: process.env.DB_URL,
   collectionName: "whymylifesessions",
@@ -112,5 +115,23 @@ this.app.use(
     this.app.listen(this.port, () => {
       console.log("App listening on port " + this.port);
     });
+
+    cron.schedule("*/1 * * * *", async ()=>{
+      const fetchedTransactions = await paymentModel.find({transactionStatus:"PENDING"}).exec()
+        console.log(fetchedTransactions)
+        if(fetchedTransactions){
+          for(const trasaction of fetchedTransactions){
+            if(trasaction && trasaction.transactionRef){
+              // console.log(trasaction, "this is the trasaction")
+              const transaction = await queryTransactionStatus(trasaction.transactionRef)
+              if(transaction && transaction.status === "success"){
+                await paymentModel.findOneAndUpdate({transactionRef:transaction.transactionRef}, {$set:{transactionStatus:transaction.status}})
+              }else{
+                await paymentModel.findOneAndUpdate({transactionRef:transaction.transactionRef}, {$set:{transactionStatus:transaction.status}})
+              }
+            }
+          }
+        }
+    })
   }
 }

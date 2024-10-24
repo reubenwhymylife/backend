@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paymentWebhook = exports.paystack = exports.getPayments = exports.deletePayment = exports.getSinglePayment = exports.getUserPaymentList = exports.payment = void 0;
+exports.queryTransactionStatus = exports.paymentWebhook = exports.paystack = exports.getPayments = exports.deletePayment = exports.getSinglePayment = exports.getUserPaymentList = exports.payment = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const CustomReasons_1 = require("../../utils/CustomReasons");
@@ -45,6 +45,7 @@ const error_moddleware_1 = require("../../middleware/error.moddleware");
 const http_status_codes_1 = require("http-status-codes");
 const https = __importStar(require("https"));
 const payment_service_1 = require("./payment.service");
+const axios_1 = __importDefault(require("axios"));
 const payment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if ((0, checkEmptyObject_1.isEmpty)(req.body)) {
         throw new error_moddleware_1.CustomError({
@@ -98,7 +99,7 @@ const deletePayment = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     const response = yield (0, payment_service_1.deletePaymentService)(sessionId, paymentId);
     return res.status(200).success({
         message: "PAYMENT_DELETED_SUCCESSFULLY",
-        data: response
+        data: response,
     });
 });
 exports.deletePayment = deletePayment;
@@ -139,25 +140,26 @@ const paystack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const params = JSON.stringify({
             email: payload.email,
             amount: payload.amount * 100,
-            callback_url: 'https://whymylife.me',
-            cancel_action: 'https://whymylife.me',
+            callback_url: "https://whymylife.me",
+            cancel_action: "https://whymylife.me",
         });
         const options = {
-            hostname: 'api.paystack.co',
+            hostname: "api.paystack.co",
             port: 443,
-            path: '/transaction/initialize',
-            method: 'POST',
+            path: "/transaction/initialize",
+            method: "POST",
             headers: {
                 Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
         };
-        const reqPaystack = https.request(options, (resPaystack) => {
-            let data = '';
-            resPaystack.on('data', (chunk) => {
+        const reqPaystack = https
+            .request(options, (resPaystack) => {
+            let data = "";
+            resPaystack.on("data", (chunk) => {
                 data += chunk;
             });
-            resPaystack.on('end', () => {
+            resPaystack.on("end", () => {
                 try {
                     const responseData = JSON.parse(data);
                     return res.status(200).success({
@@ -166,13 +168,16 @@ const paystack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     });
                 }
                 catch (error) {
-                    console.error('Error parsing response from Paystack', error);
-                    res.status(500).json({ error: 'Error parsing response from Paystack' });
+                    console.error("Error parsing response from Paystack", error);
+                    res
+                        .status(500)
+                        .json({ error: "Error parsing response from Paystack" });
                 }
             });
-        }).on('error', (error) => {
-            console.error('Error connecting to Paystack', error);
-            res.status(500).json({ error: 'Error connecting to Paystack' });
+        })
+            .on("error", (error) => {
+            console.error("Error connecting to Paystack", error);
+            res.status(500).json({ error: "Error connecting to Paystack" });
             throw new error_moddleware_1.CustomError({
                 message: error.message,
                 code: http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR,
@@ -183,7 +188,7 @@ const paystack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         reqPaystack.end();
     }
     catch (error) {
-        console.error('Error in paystack handler', error);
+        console.error("Error in paystack handler", error);
         throw new error_moddleware_1.CustomError({
             message: error.message,
             code: http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR,
@@ -194,14 +199,18 @@ const paystack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.paystack = paystack;
 const paymentWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const secret = process.env.PAYSTACK_SECRET_KEY;
-    const hash = require('crypto').createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+    const hash = require("crypto")
+        .createHmac("sha512", secret)
+        .update(JSON.stringify(req.body))
+        .digest("hex");
     try {
-        if (hash === req.headers['x-paystack-signature']) {
+        if (hash === req.headers["x-paystack-signature"]) {
             const event = req.body;
             switch (event.event) {
-                case 'charge.success':
-                    const response = yield (0, payment_service_1.webhookService)(event.data.customer.email);
-                    console.log("Transaction Successful", event.event);
+                case "charge.success":
+                    const eventRecord = event.data;
+                    const response = yield (0, payment_service_1.webhookService)(event.data.customer.email, eventRecord);
+                    console.log("Transaction Successful", event);
                     break;
                 default:
                     console.log("Unhandled event");
@@ -210,15 +219,39 @@ const paymentWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         else {
             // Invalid signature
-            throw new error_moddleware_1.CustomError({
-                message: CustomReasons_1.Reasons.customedReasons.INVALIDE_SIGNATURE,
-                code: http_status_codes_1.StatusCodes.BAD_REQUEST,
-                reason: "Inavalid signature",
-            });
+            res.status(400).json({ message: "Invalid signature" });
         }
     }
     catch (error) {
         console.log(error);
+        res.status(500).send("Internal server error");
     }
 });
 exports.paymentWebhook = paymentWebhook;
+const queryTransactionStatus = (transactionReference) => __awaiter(void 0, void 0, void 0, function* () {
+    const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+    try {
+        // Query Paystack for the transaction status
+        const response = yield axios_1.default.get(`https://api.paystack.co/transaction/verify/${transactionReference}`, {
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            },
+        });
+        const transaction = response.data.data;
+        // Check if the transaction was successful
+        if (transaction.status === "success") {
+            // Handle successful transaction
+            console.log("Transaction verified successfully", transaction);
+            return transaction;
+        }
+        else {
+            console.log("Transaction not successful yet");
+            return null;
+        }
+    }
+    catch (error) {
+        console.error("Error querying transaction status", error);
+        return null;
+    }
+});
+exports.queryTransactionStatus = queryTransactionStatus;

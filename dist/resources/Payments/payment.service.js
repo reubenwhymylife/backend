@@ -25,7 +25,7 @@ const paymentService = (payload) => __awaiter(void 0, void 0, void 0, function* 
             type: payload.type,
             amount: payload.amount,
             email: payload.email,
-            transactionStatus: payment_model_1.TxnStatus.PENDING
+            transactionStatus: payment_model_1.TxnStatus.PENDING,
         });
         yield newProduct.save();
         return newProduct;
@@ -42,10 +42,13 @@ const paymentService = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.paymentService = paymentService;
 const singlePaymentServie = (paymentId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const paymentDetails = yield payment_model_2.default.findOne({ _id: paymentId }).populate({
+        const paymentDetails = yield payment_model_2.default
+            .findOne({ _id: paymentId })
+            .populate({
             path: "userId",
-            select: "firstName lastName"
-        }).exec();
+            select: "firstName lastName",
+        })
+            .exec();
         if (!paymentDetails) {
             throw new error_moddleware_1.CustomError({
                 message: CustomReasons_1.Reasons.customedReasons.PAYMENT_DOES_NOT_EXIST,
@@ -65,9 +68,11 @@ const singlePaymentServie = (paymentId) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.singlePaymentServie = singlePaymentServie;
-const webhookService = (email) => __awaiter(void 0, void 0, void 0, function* () {
+const webhookService = (email, eventRecord) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const info = yield payment_model_2.default.findOne({ email: email, transactionStatus: payment_model_1.TxnStatus.PENDING }).exec();
+        const info = yield payment_model_2.default
+            .findOne({ email: email, transactionStatus: payment_model_1.TxnStatus.PENDING })
+            .exec();
         if (!info) {
             throw new error_moddleware_1.CustomError({
                 message: CustomReasons_1.Reasons.customedReasons.USER_NOT_FOUND,
@@ -77,11 +82,18 @@ const webhookService = (email) => __awaiter(void 0, void 0, void 0, function* ()
         }
         const updateUserTxnstatus = yield payment_model_2.default.findOneAndUpdate({ email: info.email, transactionStatus: payment_model_1.TxnStatus.PENDING }, {
             $set: {
-                transactionStatus: payment_model_1.TxnStatus.SUCCESS
-            }
+                transactionStatus: (eventRecord === null || eventRecord === void 0 ? void 0 : eventRecord.status) || payment_model_1.TxnStatus.SUCCESS,
+                transactionRef: eventRecord === null || eventRecord === void 0 ? void 0 : eventRecord.reference
+            },
         }, { new: true });
+        if (updateUserTxnstatus) {
+            console.log("Transaction status updated successfully:", updateUserTxnstatus);
+        }
+        else {
+            console.log("No pending transaction found for this email.");
+        }
         // console.log(updateUserTxnstatus)
-        return updateUserTxnstatus;
+        // return updateUserTxnstatus;
     }
     catch (error) {
         console.log(error);

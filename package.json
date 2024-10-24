@@ -23,6 +23,7 @@
     "@types/node-schedule": "^2.1.7",
     "@types/nodemailer": "^6.4.15",
     "@vercel/node": "^3.2.0",
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.6",
@@ -42,6 +43,7 @@
     "mailgun.js": "^10.2.1",
     "mongodb": "^6.5.0",
     "mongoose": "^8.2.1",
+    "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
     "nodemailer": "^6.9.13",
     "ts-node": "^10.9.2",
@@ -50,6 +52,7 @@
     "winston": "^3.12.0"
   },
   "devDependencies": {
+    "@types/node-cron": "^3.0.11",
     "nodemon": "^3.1.0",
     "tsc-watch": "^6.0.4"
   }

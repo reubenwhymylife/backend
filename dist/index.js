@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -16,6 +25,9 @@ const serverEmitter = new events_1.default();
 const express_session_1 = __importDefault(require("express-session"));
 const connect_mongo_1 = __importDefault(require("connect-mongo"));
 require("express-async-errors");
+const node_cron_1 = __importDefault(require("node-cron"));
+const payment_model_1 = __importDefault(require("./resources/Payments/payment.model"));
+const payment_controller_1 = require("./resources/Payments/payment.controller");
 const mystore = connect_mongo_1.default.create({
     mongoUrl: process.env.DB_URL,
     collectionName: "whymylifesessions",
@@ -74,11 +86,11 @@ class App {
             name: "whymylife_Captcha",
             store: mystore,
             cookie: {
-                secure: true,
-                httpOnly: true,
+                secure: false,
+                httpOnly: false,
                 maxAge: 1000 * 60 * 60 * 24,
-                partitioned: true,
-                sameSite: "none",
+                // partitioned: false,
+                sameSite: "lax",
             },
         }));
     }
@@ -102,6 +114,24 @@ class App {
         this.app.listen(this.port, () => {
             console.log("App listening on port " + this.port);
         });
+        node_cron_1.default.schedule("*/1 * * * *", () => __awaiter(this, void 0, void 0, function* () {
+            const fetchedTransactions = yield payment_model_1.default.find({ transactionStatus: "PENDING" }).exec();
+            console.log(fetchedTransactions);
+            if (fetchedTransactions) {
+                for (const trasaction of fetchedTransactions) {
+                    if (trasaction && trasaction.transactionRef) {
+                        // console.log(trasaction, "this is the trasaction")
+                        const transaction = yield (0, payment_controller_1.queryTransactionStatus)(trasaction.transactionRef);
+                        if (transaction && transaction.status === "success") {
+                            yield payment_model_1.default.findOneAndUpdate({ transactionRef: transaction.transactionRef }, { $set: { transactionStatus: transaction.status } });
+                        }
+                        else {
+                            yield payment_model_1.default.findOneAndUpdate({ transactionRef: transaction.transactionRef }, { $set: { transactionStatus: transaction.status } });
+                        }
+                    }
+                }
+            }
+        }));
     }
 }
 exports.default = App;

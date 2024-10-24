@@ -38,8 +38,11 @@ const paymentSchema = new mongoose_1.Schema({
     },
     transactionStatus: {
         type: String,
-        enum: Object.values(TxnStatus),
+        // enum: Object.values(TxnStatus),
         default: TxnStatus.FAILED
+    },
+    transactionRef: {
+        type: String
     },
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,

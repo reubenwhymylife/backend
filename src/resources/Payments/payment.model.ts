@@ -13,6 +13,7 @@ export interface Ipayments extends Document {
   amount?: number;
   email?:string,
   transactionStatus:TxnStatus
+  transactionRef:any
 }
 
 const paymentSchema = new Schema<Ipayments>(
@@ -32,8 +33,11 @@ const paymentSchema = new Schema<Ipayments>(
     },
     transactionStatus:{
       type:String,
-      enum: Object.values(TxnStatus),
+      // enum: Object.values(TxnStatus),
       default: TxnStatus.FAILED
+    },
+    transactionRef:{
+      type: String
     },
     userId: {
       type: Schema.Types.ObjectId,

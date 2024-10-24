@@ -71,7 +71,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         })
             .populate({
             path: "payments",
-            select: "paymentRef type",
+            select: "paymentRef type transactionStatus amount",
         })
             .populate({
             path: "subscriptions",
